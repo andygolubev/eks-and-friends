@@ -20,7 +20,7 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_subnet" "private_subnet" {
   for_each          = toset(local.first_3_azs)
   vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 5, index(local.first_3_azs, each.value))
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, index(local.first_3_azs, each.value))
   availability_zone = each.value
 
   tags = {
@@ -33,7 +33,7 @@ resource "aws_subnet" "private_subnet" {
 resource "aws_subnet" "public_subnet" {
   for_each          = toset(local.first_3_azs)
   vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 5, index(local.first_3_azs, each.value) + 3)
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 3, index(local.first_3_azs, each.value) + 3)
   availability_zone = each.value
 
   tags = {
