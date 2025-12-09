@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project" {
   description = "Project tag/name"
   type        = string
-  default     = "cks-eks"
+  default     = "eks-demo"
 }
 
 variable "environment" {
@@ -19,13 +19,13 @@ variable "environment" {
 variable "cluster_name" {
   description = "EKS cluster name (suffix will be added for uniqueness)"
   type        = string
-  default     = "cks-eks"
+  default     = "eks-demo"
 }
 
 variable "kubernetes_version" {
   description = "Kubernetes version for the EKS control plane"
   type        = string
-  default     = "1.30"
+  default     = "1.34"
 }
 
 variable "vpc_cidr" {
