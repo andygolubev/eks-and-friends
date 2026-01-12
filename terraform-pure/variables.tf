@@ -58,8 +58,20 @@ variable "node_max_size" {
   default     = 3
 }
 
-variable "node_instance_types" {
-  description = "EC2 instance types for the managed node group"
-  type        = list(string)
-  default     = ["t3.medium"]
+variable "node_group_arch_and_instance_types" {
+  description = "Managed node group presets keyed by architecture"
+  type = map(object({
+    ami_type       = string
+    instance_types = list(string)
+  }))
+  default = {
+    x86_64 = {
+      ami_type       = "BOTTLEROCKET_x86_64"
+      instance_types = ["t3.medium"]
+    }
+    arm_64 = {
+      ami_type       = "BOTTLEROCKET_ARM_64"
+      instance_types = ["t4g.medium"]
+    }
+  }
 }
