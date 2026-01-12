@@ -8,6 +8,7 @@ resource "aws_iam_role" "eks_node_role" {
         Principal = {
           Service = "ec2.amazonaws.com"
         }
+        Action = ["sts:AssumeRole"]
       }
     ]
   })
@@ -35,8 +36,9 @@ resource "aws_eks_node_group" "eks_node_group_main" {
 
   node_role_arn  = aws_iam_role.eks_node_role.arn
   subnet_ids     = values(aws_subnet.private)[*].id
-  capacity_type  = ON_DEMAND
-  instance_types = ["t3.medium"]
+  capacity_type  = "ON_DEMAND"
+  ami_type       = var.node_group_arch_and_instance_types.arm_64.ami_type
+  instance_types = var.node_group_arch_and_instance_types.arm_64.instance_types
 
   scaling_config {
     desired_size = var.node_desired_size
