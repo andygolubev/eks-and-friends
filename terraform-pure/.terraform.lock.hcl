@@ -20,7 +20,7 @@ provider "registry.opentofu.org/hashicorp/aws" {
 
 provider "registry.opentofu.org/hashicorp/helm" {
   version     = "3.1.1"
-  constraints = ">= 2.12.0"
+  constraints = "~> 3.1"
   hashes = [
     "h1:0EBPFRAzAnwXiyr7LVBoCtSwaoMDHEe4dbQvS4rNFuk=",
     "zh:09b38905e234c2e0b185332819614224660050b7e4b25e9e858b593ab01adafe",
