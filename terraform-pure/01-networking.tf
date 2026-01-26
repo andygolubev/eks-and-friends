@@ -51,6 +51,7 @@ resource "aws_subnet" "public" {
   tags = {
     Name = "${local.name_prefix}-public-${each.key}"
     Tier = "public"
+    "kubernetes.io/role/elb" = "1"
   }
 }
 
@@ -64,6 +65,7 @@ resource "aws_subnet" "private" {
   tags = {
     Name = "${local.name_prefix}-private-${each.key}"
     Tier = "private"
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 

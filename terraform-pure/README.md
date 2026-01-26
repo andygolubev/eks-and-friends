@@ -1,4 +1,1 @@
-terraform fmt
-terraform init
-terraform plan
-terraform apply --auto-approve
+This is the copy and update of this manual: https://github.com/antonputra/tutorials/tree/main/lessons/196
