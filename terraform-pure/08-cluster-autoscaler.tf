@@ -71,6 +71,7 @@ resource "helm_release" "cluster_autoscaler" {
   repository = "https://kubernetes.github.io/autoscaler"
   chart      = "cluster-autoscaler"
   namespace  = "kube-system"
+  create_namespace = false
   version    = "9.54.1"
 
   atomic                     = false
@@ -159,6 +160,7 @@ resource "helm_release" "aws_lbc" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
+  create_namespace = false
   version    = "1.17.0"
 
   atomic                     = false
