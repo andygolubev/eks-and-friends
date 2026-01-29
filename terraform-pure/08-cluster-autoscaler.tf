@@ -73,6 +73,29 @@ resource "helm_release" "cluster_autoscaler" {
   namespace  = "kube-system"
   version    = "9.54.1"
 
+  atomic                     = false
+  cleanup_on_fail            = false
+  dependency_update          = false
+  disable_crd_hooks          = false
+  disable_openapi_validation = false
+  disable_webhooks           = false
+  force_update               = false
+  lint                       = false
+  max_history                = 0
+  pass_credentials           = false
+  recreate_pods              = false
+  render_subchart_notes      = true
+  replace                    = false
+  reset_values               = false
+  reuse_values               = false
+  skip_crds                  = false
+  take_ownership             = false
+  timeout                    = 300
+  upgrade_install            = false
+  verify                     = false
+  wait                       = true
+  wait_for_jobs              = false
+
   # MUST be updated to match your region
   values = [
     yamlencode({
@@ -137,6 +160,29 @@ resource "helm_release" "aws_lbc" {
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
   version    = "1.17.0"
+
+  atomic                     = false
+  cleanup_on_fail            = false
+  dependency_update          = false
+  disable_crd_hooks          = false
+  disable_openapi_validation = false
+  disable_webhooks           = false
+  force_update               = false
+  lint                       = false
+  max_history                = 0
+  pass_credentials           = false
+  recreate_pods              = false
+  render_subchart_notes      = true
+  replace                    = false
+  reset_values               = false
+  reuse_values               = false
+  skip_crds                  = false
+  take_ownership             = false
+  timeout                    = 300
+  upgrade_install            = false
+  verify                     = false
+  wait                       = true
+  wait_for_jobs              = false
 
   values = [
     yamlencode({
