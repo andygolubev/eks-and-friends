@@ -66,8 +66,7 @@ module "eks" {
       addon_version = "v1.3.10-eksbuild.2"
     }
     "aws-ebs-csi-driver" = {
-      addon_version            = "v1.54.0-eksbuild.1"
-      service_account_role_arn = module.ebs_csi_driver_role.iam_role_arn
+      addon_version = "v1.54.0-eksbuild.1"
     }
     "vpc-cni" = {
       most_recent    = true
