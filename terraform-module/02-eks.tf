@@ -8,6 +8,7 @@ module "eks" {
 
   name               = var.cluster_name
   kubernetes_version = var.kubernetes_version
+  authentication_mode = "API"
 
   endpoint_public_access       = true
   endpoint_private_access      = false
@@ -67,6 +68,18 @@ module "eks" {
     "aws-ebs-csi-driver" = {
       addon_version            = "v1.54.0-eksbuild.1"
       service_account_role_arn = module.ebs_csi_driver_role.iam_role_arn
+    }
+    "vpc-cni" = {
+      most_recent    = true
+      before_compute = true
+    }
+    "coredns" = {
+      most_recent    = true
+      before_compute = true
+    }
+    "kube-proxy" = {
+      most_recent    = true
+      before_compute = true
     }
   }
 
