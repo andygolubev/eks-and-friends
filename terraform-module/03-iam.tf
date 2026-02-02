@@ -131,16 +131,30 @@ resource "aws_iam_policy" "cluster_autoscaler" {
   })
 }
 
-module "cluster_autoscaler_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
-  version = "~> 5.0"
+# EKS Pod Identity requires both sts:AssumeRole and sts:TagSession in the trust policy
+resource "aws_iam_role" "cluster_autoscaler" {
+  name = "${var.cluster_name}-cluster-autoscaler"
 
-  create_role           = true
-  role_name             = "${var.cluster_name}-cluster-autoscaler"
-  trusted_role_services = ["pods.eks.amazonaws.com"]
-  custom_role_policy_arns = [
-    aws_iam_policy.cluster_autoscaler.arn
-  ]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_autoscaler_policy" {
+  role       = aws_iam_role.cluster_autoscaler.name
+  policy_arn = aws_iam_policy.cluster_autoscaler.arn
 }
 
 resource "aws_iam_policy" "aws_lbc" {
@@ -148,16 +162,30 @@ resource "aws_iam_policy" "aws_lbc" {
   name   = "AWSLoadBalancerController"
 }
 
-module "aws_lbc_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
-  version = "~> 5.0"
+# EKS Pod Identity requires both sts:AssumeRole and sts:TagSession in the trust policy
+resource "aws_iam_role" "aws_lbc" {
+  name = "${var.cluster_name}-aws-lbc"
 
-  create_role           = true
-  role_name             = "${var.cluster_name}-aws-lbc"
-  trusted_role_services = ["pods.eks.amazonaws.com"]
-  custom_role_policy_arns = [
-    aws_iam_policy.aws_lbc.arn
-  ]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "aws_lbc_policy" {
+  role       = aws_iam_role.aws_lbc.name
+  policy_arn = aws_iam_policy.aws_lbc.arn
 }
 
 resource "aws_iam_policy" "ebs_csi_driver_encryption" {
@@ -179,15 +207,33 @@ resource "aws_iam_policy" "ebs_csi_driver_encryption" {
   })
 }
 
-module "ebs_csi_driver_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
-  version = "~> 5.0"
+# EKS Pod Identity requires both sts:AssumeRole and sts:TagSession in the trust policy
+resource "aws_iam_role" "ebs_csi_driver" {
+  name = "${var.cluster_name}-ebs-csi-driver"
 
-  create_role           = true
-  role_name             = "${var.cluster_name}-ebs-csi-driver"
-  trusted_role_services = ["pods.eks.amazonaws.com"]
-  custom_role_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
-    aws_iam_policy.ebs_csi_driver_encryption.arn
-  ]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi_driver_policy" {
+  role       = aws_iam_role.ebs_csi_driver.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi_driver_encryption_policy" {
+  role       = aws_iam_role.ebs_csi_driver.name
+  policy_arn = aws_iam_policy.ebs_csi_driver_encryption.arn
 }
