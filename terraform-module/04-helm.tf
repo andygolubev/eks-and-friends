@@ -15,33 +15,14 @@ provider "helm" {
 resource "helm_release" "metrics_server" {
   name = "metrics-server"
 
-  repository = "https://kubernetes-sigs.github.io/metrics-server/"
-  chart      = "metrics-server"
-  namespace  = "kube-system"
-  version    = "3.13.0"
+  repository       = "https://kubernetes-sigs.github.io/metrics-server/"
+  chart            = "metrics-server"
+  namespace        = "kube-system"
+  create_namespace = false
+  version          = "3.13.0"
 
-  atomic                     = false
-  cleanup_on_fail            = false
-  dependency_update          = false
-  disable_crd_hooks          = false
-  disable_openapi_validation = false
-  disable_webhooks           = false
-  force_update               = false
-  lint                       = false
-  max_history                = 0
-  pass_credentials           = false
-  recreate_pods              = false
-  render_subchart_notes      = true
-  replace                    = false
-  reset_values               = false
-  reuse_values               = false
-  skip_crds                  = false
-  take_ownership             = false
-  timeout                    = 300
-  upgrade_install            = false
-  verify                     = false
-  wait                       = true
-  wait_for_jobs              = false
+  timeout = 300
+  wait    = true
 
   values = [
     yamlencode({
@@ -61,33 +42,14 @@ resource "helm_release" "metrics_server" {
 resource "helm_release" "cluster_autoscaler" {
   name = "autoscaler"
 
-  repository = "https://kubernetes.github.io/autoscaler"
-  chart      = "cluster-autoscaler"
-  namespace  = "kube-system"
-  version    = "9.54.1"
+  repository       = "https://kubernetes.github.io/autoscaler"
+  chart            = "cluster-autoscaler"
+  namespace        = "kube-system"
+  create_namespace = false
+  version          = "9.54.1"
 
-  atomic                     = false
-  cleanup_on_fail            = false
-  dependency_update          = false
-  disable_crd_hooks          = false
-  disable_openapi_validation = false
-  disable_webhooks           = false
-  force_update               = false
-  lint                       = false
-  max_history                = 0
-  pass_credentials           = false
-  recreate_pods              = false
-  render_subchart_notes      = true
-  replace                    = false
-  reset_values               = false
-  reuse_values               = false
-  skip_crds                  = false
-  take_ownership             = false
-  timeout                    = 300
-  upgrade_install            = false
-  verify                     = false
-  wait                       = true
-  wait_for_jobs              = false
+  timeout = 300
+  wait    = true
 
   values = [
     yamlencode({
@@ -109,33 +71,14 @@ resource "helm_release" "cluster_autoscaler" {
 resource "helm_release" "aws_lbc" {
   name = "aws-load-balancer-controller"
 
-  repository = "https://aws.github.io/eks-charts"
-  chart      = "aws-load-balancer-controller"
-  namespace  = "kube-system"
-  version    = "1.17.0"
+  repository       = "https://aws.github.io/eks-charts"
+  chart            = "aws-load-balancer-controller"
+  namespace        = "kube-system"
+  create_namespace = false
+  version          = "1.17.0"
 
-  atomic                     = false
-  cleanup_on_fail            = false
-  dependency_update          = false
-  disable_crd_hooks          = false
-  disable_openapi_validation = false
-  disable_webhooks           = false
-  force_update               = false
-  lint                       = false
-  max_history                = 0
-  pass_credentials           = false
-  recreate_pods              = false
-  render_subchart_notes      = true
-  replace                    = false
-  reset_values               = false
-  reuse_values               = false
-  skip_crds                  = false
-  take_ownership             = false
-  timeout                    = 300
-  upgrade_install            = false
-  verify                     = false
-  wait                       = true
-  wait_for_jobs              = false
+  timeout = 300
+  wait    = true
 
   values = [
     yamlencode({
@@ -159,28 +102,8 @@ resource "helm_release" "cert_manager" {
   create_namespace = true
   version          = "v1.19.2"
 
-  atomic                     = false
-  cleanup_on_fail            = false
-  dependency_update          = false
-  disable_crd_hooks          = false
-  disable_openapi_validation = false
-  disable_webhooks           = false
-  force_update               = false
-  lint                       = false
-  max_history                = 0
-  pass_credentials           = false
-  recreate_pods              = false
-  render_subchart_notes      = true
-  replace                    = false
-  reset_values               = false
-  reuse_values               = false
-  skip_crds                  = false
-  take_ownership             = false
-  timeout                    = 300
-  upgrade_install            = false
-  verify                     = false
-  wait                       = true
-  wait_for_jobs              = false
+  timeout = 300
+  wait    = true
 
   values = [
     yamlencode({

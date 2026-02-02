@@ -37,7 +37,7 @@ variable "vpc_cidr" {
 variable "cluster_public_access_cidrs" {
   description = "CIDR blocks that can access the EKS public endpoint (tighten for best security)"
   type        = list(string)
-  default     = []
+  default     = ["0.0.0.0/0"]
 }
 
 variable "node_min_size" {
