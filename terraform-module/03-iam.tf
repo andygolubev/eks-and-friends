@@ -158,7 +158,7 @@ resource "aws_iam_role_policy_attachment" "cluster_autoscaler_policy" {
 }
 
 resource "aws_iam_policy" "aws_lbc" {
-  policy = file("${path.module}/../terraform-pure/iam/AWSLoadBalancerController.json")
+  policy = file("${path.module}/iam/AWSLoadBalancerController.json")
   name   = "AWSLoadBalancerController"
 }
 
