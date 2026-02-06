@@ -58,6 +58,18 @@ variable "node_max_size" {
   default     = 3
 }
 
+variable "argocd_domain" {
+  description = "Domain name for ArgoCD server"
+  type        = string
+  default     = "argocd.654654598709.realhandsonlabs.net"
+}
+
+variable "argocd_hosted_zone_name" {
+  description = "Route 53 hosted zone name used for ArgoCD DNS validation and alias record"
+  type        = string
+  default     = "654654598709.realhandsonlabs.net"
+}
+
 variable "node_group_arch_and_instance_types" {
   description = "Managed node group presets keyed by architecture"
   type = map(object({
