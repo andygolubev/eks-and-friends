@@ -1,0 +1,77 @@
+# Default deny all ingress in the auth namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Allow frontend namespace to reach auth service
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-auth
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: auth
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: frontend
+      ports:
+        - port: 8080
+          protocol: TCP
+---
+# Allow auth pods to reach MongoDB
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-auth-to-mongodb
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: mongodb
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: auth
+      ports:
+        - port: 27017
+          protocol: TCP
+---
+# Allow auth pods egress to MongoDB and DNS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-auth-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: auth
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: mongodb
+      ports:
+        - port: 27017
+          protocol: TCP
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

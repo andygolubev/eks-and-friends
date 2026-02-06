@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  labels:
+    {{- include "auth.labels" . | nindent 4 }}
+    app.kubernetes.io/component: auth
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: auth
+        {{- include "auth.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: auth
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_URI
+            - name: MONGO_DB
+              value: {{ .Values.mongodb.database | quote }}
+            - name: PORT
+              value: "8080"
+            - name: RUST_LOG
+              value: "info"
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

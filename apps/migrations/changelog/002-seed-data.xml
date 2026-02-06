@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="002-seed-data" author="platform-team" context="seed">
+        <insert tableName="items">
+            <column name="name" value="Widget Alpha" />
+            <column name="description" value="A versatile widget for all your alpha needs" />
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Gadget Beta" />
+            <column name="description" value="Next-generation gadget with beta features" />
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Doohickey Gamma" />
+            <column name="description" value="The gamma-class doohickey for advanced users" />
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Thingamajig Delta" />
+            <column name="description" value="Premium delta-grade thingamajig" />
+        </insert>
+        <insert tableName="items">
+            <column name="name" value="Gizmo Epsilon" />
+            <column name="description" value="Compact epsilon gizmo with turbo mode" />
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
