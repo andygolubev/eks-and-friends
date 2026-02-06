@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: auth
-  tag: latest
+  repository: andygolubev/eks-demo-auth
+  tag: "v0.0.1"
   pullPolicy: IfNotPresent
 
 service:

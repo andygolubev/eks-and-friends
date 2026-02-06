@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: backend
-  tag: latest
+  repository: andygolubev/eks-demo-backend
+  tag: "v0.0.1"
   pullPolicy: IfNotPresent
 
 service:
@@ -30,6 +30,6 @@ postgresql:
 
 migrations:
   image:
-    repository: migrations
-    tag: latest
+    repository: andygolubev/eks-demo-migrations
+    tag: "v0.0.1"
     pullPolicy: IfNotPresent
