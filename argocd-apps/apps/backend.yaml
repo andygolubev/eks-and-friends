@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: git@github.com:andygolubev/eks-and-friends.git
+    repoURL: https://github.com/andygolubev/eks-and-friends.git
     targetRevision: main
     path: argocd-apps/charts/backend
     helm:
