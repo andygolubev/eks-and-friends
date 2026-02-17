@@ -131,8 +131,26 @@ resource "aws_acm_certificate" "argocd" {
   }
 }
 
+resource "aws_acm_certificate" "frontend" {
+  domain_name       = var.frontend_domain
+  validation_method = "DNS"
+
+  tags = {
+    Name = var.frontend_domain
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 data "aws_route53_zone" "argocd" {
   name         = var.argocd_hosted_zone_name
+  private_zone = false
+}
+
+data "aws_route53_zone" "frontend" {
+  name         = var.frontend_hosted_zone_name
   private_zone = false
 }
 
@@ -156,6 +174,28 @@ resource "aws_route53_record" "argocd_cert_validation" {
 resource "aws_acm_certificate_validation" "argocd" {
   certificate_arn         = aws_acm_certificate.argocd.arn
   validation_record_fqdns = [for record in aws_route53_record.argocd_cert_validation : record.fqdn]
+}
+
+resource "aws_route53_record" "frontend_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.frontend.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.frontend.zone_id
+}
+
+resource "aws_acm_certificate_validation" "frontend" {
+  certificate_arn         = aws_acm_certificate.frontend.arn
+  validation_record_fqdns = [for record in aws_route53_record.frontend_cert_validation : record.fqdn]
 }
 
 resource "helm_release" "argocd" {

@@ -70,6 +70,18 @@ variable "argocd_hosted_zone_name" {
   default     = "064083568243.realhandsonlabs.net"
 }
 
+variable "frontend_domain" {
+  description = "Domain name for frontend ingress"
+  type        = string
+  default     = "front.064083568243.realhandsonlabs.net"
+}
+
+variable "frontend_hosted_zone_name" {
+  description = "Route 53 hosted zone name used for frontend DNS validation"
+  type        = string
+  default     = "064083568243.realhandsonlabs.net"
+}
+
 variable "node_group_arch_and_instance_types" {
   description = "Managed node group presets keyed by architecture"
   type = map(object({
