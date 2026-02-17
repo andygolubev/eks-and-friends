@@ -14,4 +14,4 @@ RUN mkdir -p /var/cache/nginx/client_temp /var/run /var/log/nginx \
     && chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d
 EXPOSE 8080
 USER nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx", "-g", "pid /tmp/nginx.pid; daemon off;"]
