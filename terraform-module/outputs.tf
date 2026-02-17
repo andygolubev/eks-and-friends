@@ -5,7 +5,7 @@ output "argocd_url" {
 
 output "argocd_password_command" {
   description = "Command to retrieve the ArgoCD admin password"
-  value       = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=\"{.data.password}\" | base64 -d"
+  value       = "(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 --decode; echo"
 }
 
 output "kubeconfig_command" {
