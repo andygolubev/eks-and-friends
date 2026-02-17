@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: andygolubev/eks-demo-backend
-  tag: "sha-c9458b0"
+  tag: "sha-abd9dd2"
   pullPolicy: IfNotPresent
 
 service:
@@ -31,5 +31,5 @@ postgresql:
 migrations:
   image:
     repository: andygolubev/eks-demo-migrations
-    tag: "sha-75ce8bb"
+    tag: "sha-abd9dd2"
     pullPolicy: IfNotPresent

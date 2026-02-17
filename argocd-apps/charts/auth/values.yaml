@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: andygolubev/eks-demo-auth
-  tag: "sha-c9458b0"
+  tag: "sha-abd9dd2"
   pullPolicy: IfNotPresent
 
 service:
