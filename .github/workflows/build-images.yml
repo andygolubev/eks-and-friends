@@ -26,6 +26,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       auth: ${{ steps.filter.outputs.auth }}
       migrations: ${{ steps.filter.outputs.migrations }}
+      ci: ${{ steps.filter.outputs.ci }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -41,11 +42,14 @@ jobs:
               - 'apps/auth/**'
             migrations:
               - 'apps/migrations/**'
+            ci:
+              - '.github/workflows/build-images.yml'
 
   build-frontend:
     needs: detect-changes
     if: >
       needs.detect-changes.outputs.frontend == 'true' ||
+      needs.detect-changes.outputs.ci == 'true' ||
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
@@ -87,6 +91,7 @@ jobs:
     needs: detect-changes
     if: >
       needs.detect-changes.outputs.backend == 'true' ||
+      needs.detect-changes.outputs.ci == 'true' ||
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
@@ -128,6 +133,7 @@ jobs:
     needs: detect-changes
     if: >
       needs.detect-changes.outputs.auth == 'true' ||
+      needs.detect-changes.outputs.ci == 'true' ||
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
@@ -169,6 +175,7 @@ jobs:
     needs: detect-changes
     if: >
       needs.detect-changes.outputs.migrations == 'true' ||
+      needs.detect-changes.outputs.ci == 'true' ||
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
