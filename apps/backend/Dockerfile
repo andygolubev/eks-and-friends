@@ -1,5 +1,5 @@
 # --- Build stage ---
-FROM --platform=$BUILDPLATFORM rust:1.84-bookworm AS build
+FROM --platform=$BUILDPLATFORM rust:1.85-bookworm AS build
 ARG TARGETARCH
 
 # Install cross-compilation toolchains
