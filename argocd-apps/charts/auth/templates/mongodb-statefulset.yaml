@@ -29,6 +29,20 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data/db
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - >
+                  mongosh --quiet
+                  --username "$MONGO_INITDB_ROOT_USERNAME"
+                  --password "$MONGO_INITDB_ROOT_PASSWORD"
+                  --authenticationDatabase admin
+                  --eval "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
           readinessProbe:
             exec:
               command:
@@ -40,8 +54,10 @@ spec:
                   --password "$MONGO_INITDB_ROOT_PASSWORD"
                   --authenticationDatabase admin
                   --eval "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
           livenessProbe:
             exec:
               command:
@@ -55,6 +71,8 @@ spec:
                   --eval "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"
             initialDelaySeconds: 30
             periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 4
           resources:
             requests:
               cpu: 100m
