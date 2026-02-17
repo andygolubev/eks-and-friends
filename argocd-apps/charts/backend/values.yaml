@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: andygolubev/eks-demo-backend
-  tag: "sha-75ce8bb"
+  tag: "sha-c9458b0"
   pullPolicy: IfNotPresent
 
 service:
