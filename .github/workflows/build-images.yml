@@ -209,7 +209,7 @@ jobs:
   # After all images are built, update Helm values with the new SHA tag
   update-helm-values:
     needs: [build-frontend, build-backend, build-auth, build-migrations]
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled()
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled() && !contains(join(needs.*.result, ','), 'failure')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -220,28 +220,42 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update image tags in Helm values
+        env:
+          FRONTEND_BUILT: ${{ needs.build-frontend.result == 'success' }}
+          BACKEND_BUILT: ${{ needs.build-backend.result == 'success' }}
+          AUTH_BUILT: ${{ needs.build-auth.result == 'success' }}
+          MIGRATIONS_BUILT: ${{ needs.build-migrations.result == 'success' }}
         run: |
           SHA_TAG="sha-${GITHUB_SHA::7}"
           echo "Updating image tags to ${SHA_TAG}"
 
-          # frontend
-          sed -i "s|^  tag: .*|  tag: \"${SHA_TAG}\"|" argocd-apps/charts/frontend/values.yaml
+          if [ "${FRONTEND_BUILT}" = "true" ]; then
+            echo "Updating frontend chart tag"
+            sed -i "s|^  tag: .*|  tag: \"${SHA_TAG}\"|" argocd-apps/charts/frontend/values.yaml
+          fi
 
-          # backend app image
-          sed -i "0,/^  tag: .*/s|^  tag: .*|  tag: \"${SHA_TAG}\"|" argocd-apps/charts/backend/values.yaml
+          if [ "${BACKEND_BUILT}" = "true" ]; then
+            echo "Updating backend chart tag"
+            # backend app image
+            sed -i "0,/^  tag: .*/s|^  tag: .*|  tag: \"${SHA_TAG}\"|" argocd-apps/charts/backend/values.yaml
+          fi
 
-          # backend migrations image (second occurrence)
-          # Use awk to replace only the tag under migrations.image
-          awk -v tag="${SHA_TAG}" '
-            /^migrations:/ { in_mig=1 }
-            in_mig && /^  image:/ { in_img=1 }
-            in_img && /^    tag:/ { $0="    tag: \"" tag "\""; in_img=0; in_mig=0 }
-            { print }
-          ' argocd-apps/charts/backend/values.yaml > /tmp/backend-values.yaml
-          mv /tmp/backend-values.yaml argocd-apps/charts/backend/values.yaml
+          if [ "${MIGRATIONS_BUILT}" = "true" ]; then
+            echo "Updating migrations chart tag"
+            # backend migrations image
+            awk -v tag="${SHA_TAG}" '
+              /^migrations:/ { in_mig=1 }
+              in_mig && /^  image:/ { in_img=1 }
+              in_img && /^    tag:/ { $0="    tag: \"" tag "\""; in_img=0; in_mig=0 }
+              { print }
+            ' argocd-apps/charts/backend/values.yaml > /tmp/backend-values.yaml
+            mv /tmp/backend-values.yaml argocd-apps/charts/backend/values.yaml
+          fi
 
-          # auth
-          sed -i "s|^  tag: .*|  tag: \"${SHA_TAG}\"|" argocd-apps/charts/auth/values.yaml
+          if [ "${AUTH_BUILT}" = "true" ]; then
+            echo "Updating auth chart tag"
+            sed -i "s|^  tag: .*|  tag: \"${SHA_TAG}\"|" argocd-apps/charts/auth/values.yaml
+          fi
 
       - name: Commit and push updated tags
         run: |
