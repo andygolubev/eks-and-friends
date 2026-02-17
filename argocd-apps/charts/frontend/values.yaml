@@ -18,7 +18,7 @@ resources:
 
 ingress:
   enabled: true
-  hostname: front.654654598709.realhandsonlabs.net
+  hostname: front.064083568243.realhandsonlabs.net
   ingressClassName: alb
   certificateArn: ""
   annotations: {}
