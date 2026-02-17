@@ -32,17 +32,27 @@ spec:
           readinessProbe:
             exec:
               command:
-                - mongosh
-                - --eval
-                - "db.adminCommand('ping')"
+                - sh
+                - -c
+                - >
+                  mongosh --quiet
+                  --username "$MONGO_INITDB_ROOT_USERNAME"
+                  --password "$MONGO_INITDB_ROOT_PASSWORD"
+                  --authenticationDatabase admin
+                  --eval "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             exec:
               command:
-                - mongosh
-                - --eval
-                - "db.adminCommand('ping')"
+                - sh
+                - -c
+                - >
+                  mongosh --quiet
+                  --username "$MONGO_INITDB_ROOT_USERNAME"
+                  --password "$MONGO_INITDB_ROOT_PASSWORD"
+                  --authenticationDatabase admin
+                  --eval "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"
             initialDelaySeconds: 30
             periodSeconds: 15
           resources:
