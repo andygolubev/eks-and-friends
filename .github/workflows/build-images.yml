@@ -216,7 +216,7 @@ jobs:
   # After all images are built, update Helm values with the new SHA tag
   update-helm-values:
     needs: [build-frontend, build-backend, build-auth, build-migrations]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled() && !contains(join(needs.*.result, ','), 'failure')
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') && !cancelled() && !contains(join(needs.*.result, ','), 'failure')
     runs-on: ubuntu-latest
     permissions:
       contents: write
