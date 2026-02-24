@@ -61,25 +61,25 @@ variable "node_max_size" {
 variable "argocd_domain" {
   description = "Domain name for ArgoCD server"
   type        = string
-  default     = "argocd.064083568243.realhandsonlabs.net"
+  default     = "argocd.548852144085.realhandsonlabs.net"
 }
 
 variable "argocd_hosted_zone_name" {
   description = "Route 53 hosted zone name used for ArgoCD DNS validation and alias record"
   type        = string
-  default     = "064083568243.realhandsonlabs.net"
+  default     = "548852144085.realhandsonlabs.net"
 }
 
 variable "frontend_domain" {
   description = "Domain name for frontend ingress"
   type        = string
-  default     = "front.064083568243.realhandsonlabs.net"
+  default     = "front.548852144085.realhandsonlabs.net"
 }
 
 variable "frontend_hosted_zone_name" {
   description = "Route 53 hosted zone name used for frontend DNS validation"
   type        = string
-  default     = "064083568243.realhandsonlabs.net"
+  default     = "548852144085.realhandsonlabs.net"
 }
 
 variable "node_group_arch_and_instance_types" {
