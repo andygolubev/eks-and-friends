@@ -1,0 +1,7 @@
+gatewayClass:
+  name: aws-alb
+  controllerName: gateway.k8s.aws/alb
+
+gateway:
+  name: argocd-gateway
+  certificateArns: []

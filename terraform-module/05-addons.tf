@@ -1,8 +1,8 @@
-resource "aws_eks_pod_identity_association" "cluster_autoscaler" {
+resource "aws_eks_pod_identity_association" "ebs_csi_driver" {
   cluster_name    = module.eks.cluster_name
   namespace       = "kube-system"
-  service_account = "cluster-autoscaler"
-  role_arn        = aws_iam_role.cluster_autoscaler.arn
+  service_account = "ebs-csi-controller-sa"
+  role_arn        = aws_iam_role.ebs_csi_driver.arn
 }
 
 resource "aws_eks_pod_identity_association" "aws_lbc" {
@@ -12,9 +12,9 @@ resource "aws_eks_pod_identity_association" "aws_lbc" {
   role_arn        = aws_iam_role.aws_lbc.arn
 }
 
-resource "aws_eks_pod_identity_association" "ebs_csi_driver" {
+resource "aws_eks_pod_identity_association" "karpenter" {
   cluster_name    = module.eks.cluster_name
-  namespace       = "kube-system"
-  service_account = "ebs-csi-controller-sa"
-  role_arn        = aws_iam_role.ebs_csi_driver.arn
+  namespace       = var.karpenter_namespace
+  service_account = "karpenter"
+  role_arn        = aws_iam_role.karpenter_controller.arn
 }

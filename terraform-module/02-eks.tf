@@ -1,20 +1,55 @@
 locals {
   ecr_read_only_policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+
+  eks_addons = merge(
+    {
+      "eks-pod-identity-agent" = {
+        addon_version = "v1.3.10-eksbuild.2"
+      }
+      "aws-ebs-csi-driver" = {
+        addon_version               = "v1.54.0-eksbuild.1"
+        resolve_conflicts_on_create = "OVERWRITE"
+      }
+      "vpc-cni" = {
+        most_recent    = true
+        before_compute = true
+      }
+      "coredns" = {
+        most_recent    = true
+        before_compute = true
+      }
+      "kube-proxy" = {
+        most_recent    = true
+        before_compute = true
+      }
+    },
+    var.enable_metrics_server ? {
+      "metrics-server" = {
+        most_recent = true
+      }
+    } : {},
+    var.enable_cert_manager ? {
+      "cert-manager" = {
+        most_recent                 = true
+        resolve_conflicts_on_create = "OVERWRITE"
+      }
+    } : {}
+  )
 }
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.15"
 
-  name               = var.cluster_name
-  kubernetes_version = var.kubernetes_version
+  name                = var.cluster_name
+  kubernetes_version  = var.kubernetes_version
   authentication_mode = "API"
 
   endpoint_public_access       = true
   endpoint_private_access      = false
   endpoint_public_access_cidrs = var.cluster_public_access_cidrs
 
-  enable_irsa                            = true
+  enable_irsa                              = true
   enable_cluster_creator_admin_permissions = true
 
   vpc_id     = module.vpc.vpc_id
@@ -50,6 +85,10 @@ module "eks" {
     }
   }
 
+  node_security_group_tags = {
+    "karpenter.sh/discovery" = var.cluster_name
+  }
+
   access_entries = {
     eks_developer = {
       principal_arn     = aws_iam_user.eks_developer.arn
@@ -59,28 +98,13 @@ module "eks" {
       principal_arn     = module.eks_admin_role.iam_role_arn
       kubernetes_groups = ["eks-admin"]
     }
+    karpenter_node = {
+      principal_arn = aws_iam_role.karpenter_node.arn
+      type          = "EC2_LINUX"
+    }
   }
 
-  addons = {
-    "eks-pod-identity-agent" = {
-      addon_version = "v1.3.10-eksbuild.2"
-    }
-    "aws-ebs-csi-driver" = {
-      addon_version = "v1.54.0-eksbuild.1"
-    }
-    "vpc-cni" = {
-      most_recent    = true
-      before_compute = true
-    }
-    "coredns" = {
-      most_recent    = true
-      before_compute = true
-    }
-    "kube-proxy" = {
-      most_recent    = true
-      before_compute = true
-    }
-  }
+  addons = local.eks_addons
 
   eks_managed_node_groups = {
     main_arm64 = {

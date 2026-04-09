@@ -1,4 +1,6 @@
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_iam_user" "eks_developer" {
   name = "eks-developer"
@@ -97,72 +99,15 @@ resource "aws_iam_user_policy_attachment" "eks_admin_policy_attachment" {
   policy_arn = aws_iam_policy.eks_assume_admin.arn
 }
 
-resource "aws_iam_policy" "cluster_autoscaler" {
-  name = "${var.cluster_name}-cluster-autoscaler"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "autoscaling:DescribeAutoScalingGroups",
-          "autoscaling:DescribeAutoScalingInstances",
-          "autoscaling:DescribeLaunchConfigurations",
-          "autoscaling:DescribeScalingActivities",
-          "autoscaling:DescribeTags",
-          "ec2:DescribeImages",
-          "ec2:DescribeInstanceTypes",
-          "ec2:DescribeLaunchTemplateVersions",
-          "ec2:GetInstanceTypesFromInstanceRequirements",
-          "eks:DescribeNodegroup"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "autoscaling:SetDesiredCapacity",
-          "autoscaling:TerminateInstanceInAutoScalingGroup"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# EKS Pod Identity requires both sts:AssumeRole and sts:TagSession in the trust policy
-resource "aws_iam_role" "cluster_autoscaler" {
-  name = "${var.cluster_name}-cluster-autoscaler"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "pods.eks.amazonaws.com"
-        }
-        Action = [
-          "sts:AssumeRole",
-          "sts:TagSession"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "cluster_autoscaler_policy" {
-  role       = aws_iam_role.cluster_autoscaler.name
-  policy_arn = aws_iam_policy.cluster_autoscaler.arn
-}
+# ---------------------------------------------------------------------------
+# AWS Load Balancer Controller
+# ---------------------------------------------------------------------------
 
 resource "aws_iam_policy" "aws_lbc" {
   policy = file("${path.module}/iam/AWSLoadBalancerController.json")
   name   = "AWSLoadBalancerController"
 }
 
-# EKS Pod Identity requires both sts:AssumeRole and sts:TagSession in the trust policy
 resource "aws_iam_role" "aws_lbc" {
   name = "${var.cluster_name}-aws-lbc"
 
@@ -188,6 +133,10 @@ resource "aws_iam_role_policy_attachment" "aws_lbc_policy" {
   policy_arn = aws_iam_policy.aws_lbc.arn
 }
 
+# ---------------------------------------------------------------------------
+# EBS CSI Driver
+# ---------------------------------------------------------------------------
+
 resource "aws_iam_policy" "ebs_csi_driver_encryption" {
   name = "${var.cluster_name}-ebs-csi-driver-encryption"
 
@@ -207,7 +156,6 @@ resource "aws_iam_policy" "ebs_csi_driver_encryption" {
   })
 }
 
-# EKS Pod Identity requires both sts:AssumeRole and sts:TagSession in the trust policy
 resource "aws_iam_role" "ebs_csi_driver" {
   name = "${var.cluster_name}-ebs-csi-driver"
 
@@ -237,3 +185,118 @@ resource "aws_iam_role_policy_attachment" "ebs_csi_driver_encryption_policy" {
   role       = aws_iam_role.ebs_csi_driver.name
   policy_arn = aws_iam_policy.ebs_csi_driver_encryption.arn
 }
+
+# ---------------------------------------------------------------------------
+# Karpenter
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "karpenter_node" {
+  name = "${var.cluster_name}-karpenter-node"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.${data.aws_partition.current.dns_suffix}"
+        }
+        Action = [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_worker" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_cni" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_ecr" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = local.ecr_read_only_policy_arn
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_ssm" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_policy" "karpenter_controller" {
+  name = "${var.cluster_name}-karpenter-controller"
+
+  policy = templatefile("${path.module}/iam/KarpenterController.json.tftpl", {
+    account_id    = data.aws_caller_identity.current.account_id
+    cluster_name  = module.eks.cluster_name
+    node_role_arn = aws_iam_role.karpenter_node.arn
+    partition     = data.aws_partition.current.partition
+    region        = data.aws_region.current.name
+    queue_arn     = aws_sqs_queue.karpenter_interruption.arn
+  })
+}
+
+resource "aws_iam_role" "karpenter_controller" {
+  name = "${var.cluster_name}-karpenter-controller"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_controller_policy" {
+  role       = aws_iam_role.karpenter_controller.name
+  policy_arn = aws_iam_policy.karpenter_controller.arn
+}
+
+# ---------------------------------------------------------------------------
+# Managed Argo CD capability
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "argocd_capability" {
+  count = var.argocd_enable_managed_capability ? 1 : 0
+
+  name = "${var.cluster_name}-argocd-capability"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "capabilities.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "argocd_capability_secrets_manager" {
+  count = var.argocd_enable_managed_capability && var.argocd_enable_secrets_manager_access ? 1 : 0
+
+  role       = aws_iam_role.argocd_capability[0].name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSSecretsManagerClientReadOnlyAccess"
+}
+
