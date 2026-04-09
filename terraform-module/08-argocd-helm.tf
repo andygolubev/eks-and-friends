@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# ACM certificate — ArgoCD
+# ACM certificate — ArgoCD domain
 # ---------------------------------------------------------------------------
 
 resource "aws_acm_certificate" "argocd" {
@@ -43,7 +43,7 @@ resource "aws_acm_certificate_validation" "argocd" {
 }
 
 # ---------------------------------------------------------------------------
-# ArgoCD — Helm chart with ALB ingress
+# ArgoCD — Helm (no Ingress; exposed via Gateway API HTTPRoute below)
 # ---------------------------------------------------------------------------
 
 resource "helm_release" "argocd" {
@@ -51,7 +51,7 @@ resource "helm_release" "argocd" {
 
   repository       = "https://argoproj.github.io/argo-helm"
   chart            = "argo-cd"
-  namespace        = "argocd"
+  namespace        = var.argocd_namespace
   create_namespace = true
   version          = "7.8.23"
 
@@ -63,48 +63,59 @@ resource "helm_release" "argocd" {
       global = {
         domain = var.argocd_domain
       }
-
       configs = {
         params = {
           "server.insecure" = true
         }
       }
-
-      server = {
-        ingress = {
-          enabled          = true
-          controller       = "aws"
-          ingressClassName = "alb"
-          annotations = {
-            "alb.ingress.kubernetes.io/scheme"          = "internet-facing"
-            "alb.ingress.kubernetes.io/target-type"     = "ip"
-            "alb.ingress.kubernetes.io/certificate-arn" = aws_acm_certificate_validation.argocd.certificate_arn
-            "alb.ingress.kubernetes.io/listen-ports"    = jsonencode([{ "HTTPS" = 443 }, { "HTTP" = 80 }])
-            "alb.ingress.kubernetes.io/ssl-redirect"    = "443"
-            "alb.ingress.kubernetes.io/backend-protocol-version" = "GRPC"
-          }
-          hostname = var.argocd_domain
-        }
-      }
     })
   ]
 
-  depends_on = [helm_release.aws_lbc]
+  depends_on = [helm_release.gateway_bootstrap]
 }
 
 # ---------------------------------------------------------------------------
-# Route53 alias record — ArgoCD ALB
+# HTTPRoute — route argocd.domain → argocd-server via the shared Gateway
 # ---------------------------------------------------------------------------
 
-data "aws_lb" "argocd" {
-  tags = {
-    "elbv2.k8s.aws/cluster"    = module.eks.cluster_name
-    "ingress.k8s.aws/resource" = "LoadBalancer"
-    "ingress.k8s.aws/stack"    = "argocd/argocd-server"
+resource "null_resource" "argocd_httproute" {
+  triggers = {
+    cluster_name = module.eks.cluster_name
+    argocd_domain = var.argocd_domain
   }
 
-  depends_on = [helm_release.argocd]
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f - <<YAML
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd
+  namespace: ${var.argocd_namespace}
+spec:
+  parentRefs:
+    - name: argocd-gateway
+      namespace: ${var.argocd_namespace}
+  hostnames:
+    - "${var.argocd_domain}"
+  rules:
+    - backendRefs:
+        - name: argocd-server
+          port: 80
+YAML
+    EOF
+  }
+
+  depends_on = [
+    helm_release.argocd,
+    null_resource.wait_for_gateway_alb,
+  ]
 }
+
+# ---------------------------------------------------------------------------
+# Route53 alias — ArgoCD domain → same Gateway ALB as frontend
+# ---------------------------------------------------------------------------
 
 resource "aws_route53_record" "argocd" {
   zone_id = data.aws_route53_zone.argocd.zone_id
@@ -112,8 +123,8 @@ resource "aws_route53_record" "argocd" {
   type    = "A"
 
   alias {
-    name                   = data.aws_lb.argocd.dns_name
-    zone_id                = data.aws_lb.argocd.zone_id
+    name                   = data.aws_lb.gateway.dns_name
+    zone_id                = data.aws_lb.gateway.zone_id
     evaluate_target_health = true
   }
 }
