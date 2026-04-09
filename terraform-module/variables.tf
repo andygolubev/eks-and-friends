@@ -138,13 +138,13 @@ variable "enable_cert_manager" {
 variable "frontend_domain" {
   description = "Domain name for frontend ingress"
   type        = string
-  default     = "front.631984197467.realhandsonlabs.net"
+  default     = "front.381491953024.realhandsonlabs.net"
 }
 
 variable "frontend_hosted_zone_name" {
   description = "Route 53 hosted zone name used for frontend DNS validation"
   type        = string
-  default     = "631984197467.realhandsonlabs.net"
+  default     = "381491953024.realhandsonlabs.net"
 }
 
 # ---------------------------------------------------------------------------
@@ -154,13 +154,13 @@ variable "frontend_hosted_zone_name" {
 variable "argocd_domain" {
   description = "Fully-qualified domain name for the ArgoCD server"
   type        = string
-  default     = "argocd.631984197467.realhandsonlabs.net"
+  default     = "argocd.381491953024.realhandsonlabs.net"
 }
 
 variable "argocd_hosted_zone_name" {
   description = "Route 53 hosted zone name used for ArgoCD DNS"
   type        = string
-  default     = "631984197467.realhandsonlabs.net"
+  default     = "381491953024.realhandsonlabs.net"
 }
 
 variable "argocd_capability_name" {
