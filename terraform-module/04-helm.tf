@@ -1,23 +1,25 @@
-data "aws_eks_cluster_auth" "eks" {
-  name = module.eks.cluster_name
-
-  depends_on = [module.eks]
-}
-
 provider "helm" {
   repository_cache = "${path.module}/.terraform-helm-repository-cache"
 
   kubernetes = {
     host                   = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    token                  = data.aws_eks_cluster_auth.eks.token
+    exec = {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    }
   }
 }
 
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.eks.token
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+  }
 }
 
 # ---------------------------------------------------------------------------
@@ -99,26 +101,34 @@ resource "aws_acm_certificate_validation" "frontend" {
 }
 
 # ---------------------------------------------------------------------------
-# gp3 StorageClass — EBS gp3 default class
+# gp3 StorageClass — EBS gp3 default class (applied via kubectl)
 # ---------------------------------------------------------------------------
 
-resource "kubernetes_storage_class_v1" "gp3" {
-  metadata {
-    name = "gp3"
-    annotations = {
-      "storageclass.kubernetes.io/is-default-class" = "true"
-    }
+resource "null_resource" "gp3_storage_class" {
+  triggers = {
+    cluster_name = module.eks.cluster_name
   }
 
-  storage_provisioner    = "ebs.csi.aws.com"
-  reclaim_policy         = "Retain"
-  volume_binding_mode    = "WaitForFirstConsumer"
-  allow_volume_expansion = true
-
-  parameters = {
-    type      = "gp3"
-    encrypted = "true"
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f - <<YAML
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  type: gp3
+  encrypted: "true"
+YAML
+    EOF
   }
 
-  depends_on = [module.eks]
+  depends_on = [helm_release.aws_lbc]
 }

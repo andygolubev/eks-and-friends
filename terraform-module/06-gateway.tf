@@ -1,50 +1,36 @@
 # ---------------------------------------------------------------------------
-# Gateway API CRDs
+# Gateway API CRDs — installed via kubectl after cluster is ready
+# (kubernetes_manifest requires a live API server at plan time, so we use
+#  local-exec instead to avoid chicken-and-egg issues on fresh clusters)
 # ---------------------------------------------------------------------------
 
-data "http" "gateway_api_standard_install" {
-  url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml"
-}
-
-data "http" "aws_lbc_gateway_crds" {
-  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.17.0/config/crd/gateway/gateway-crds.yaml"
-}
-
-locals {
-  gateway_api_documents = [
-    for doc in split("\n---\n", data.http.gateway_api_standard_install.response_body) : try(yamldecode(doc), null)
-  ]
-
-  gateway_api_crd_manifests = {
-    for doc in local.gateway_api_documents : doc.metadata.name => doc
-    if doc != null && try(doc.kind, "") == "CustomResourceDefinition"
+resource "null_resource" "gateway_api_crds" {
+  triggers = {
+    cluster_name = module.eks.cluster_name
+    crd_version  = "v1.5.0"
   }
 
-  aws_lbc_gateway_documents = [
-    for doc in split("\n---\n", data.http.aws_lbc_gateway_crds.response_body) : try(yamldecode(doc), null)
-  ]
-
-  aws_lbc_gateway_crd_manifests = {
-    for doc in local.aws_lbc_gateway_documents : doc.metadata.name => doc
-    if doc != null && try(doc.kind, "") == "CustomResourceDefinition"
-  }
-}
-
-resource "kubernetes_manifest" "gateway_api_crds" {
-  for_each = local.gateway_api_crd_manifests
-  manifest = {
-    for key, value in each.value : key => value
-    if key != "status"
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
+    EOF
   }
 
   depends_on = [helm_release.aws_lbc]
 }
 
-resource "kubernetes_manifest" "aws_lbc_gateway_crds" {
-  for_each = local.aws_lbc_gateway_crd_manifests
-  manifest = {
-    for key, value in each.value : key => value
-    if key != "status"
+resource "null_resource" "aws_lbc_gateway_crds" {
+  triggers = {
+    cluster_name = module.eks.cluster_name
+    lbc_version  = "v2.17.0"
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.17.0/config/crd/gateway/gateway-crds.yaml
+    EOF
   }
 
   depends_on = [helm_release.aws_lbc]
@@ -77,7 +63,7 @@ resource "helm_release" "gateway_bootstrap" {
   ]
 
   depends_on = [
-    kubernetes_manifest.gateway_api_crds,
-    kubernetes_manifest.aws_lbc_gateway_crds,
+    null_resource.gateway_api_crds,
+    null_resource.aws_lbc_gateway_crds,
   ]
 }

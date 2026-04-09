@@ -237,7 +237,7 @@ resource "aws_iam_policy" "karpenter_controller" {
     cluster_name  = module.eks.cluster_name
     node_role_arn = aws_iam_role.karpenter_node.arn
     partition     = data.aws_partition.current.partition
-    region        = data.aws_region.current.name
+    region        = data.aws_region.current.region
     queue_arn     = aws_sqs_queue.karpenter_interruption.arn
   })
 }
@@ -267,36 +267,5 @@ resource "aws_iam_role_policy_attachment" "karpenter_controller_policy" {
   policy_arn = aws_iam_policy.karpenter_controller.arn
 }
 
-# ---------------------------------------------------------------------------
-# Managed Argo CD capability
-# ---------------------------------------------------------------------------
 
-resource "aws_iam_role" "argocd_capability" {
-  count = var.argocd_enable_managed_capability ? 1 : 0
-
-  name = "${var.cluster_name}-argocd-capability"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "capabilities.eks.amazonaws.com"
-        }
-        Action = [
-          "sts:AssumeRole",
-          "sts:TagSession"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "argocd_capability_secrets_manager" {
-  count = var.argocd_enable_managed_capability && var.argocd_enable_secrets_manager_access ? 1 : 0
-
-  role       = aws_iam_role.argocd_capability[0].name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSSecretsManagerClientReadOnlyAccess"
-}
 

@@ -124,14 +124,6 @@ resource "aws_cloudwatch_event_target" "karpenter_instance_state_change" {
   arn       = aws_sqs_queue.karpenter_interruption.arn
 }
 
-resource "aws_ec2_tag" "karpenter_subnet_discovery" {
-  for_each = toset(module.vpc.private_subnets)
-
-  resource_id = each.value
-  key         = "karpenter.sh/discovery"
-  value       = module.eks.cluster_name
-}
-
 resource "aws_ec2_tag" "karpenter_node_security_group_discovery" {
   resource_id = module.eks.node_security_group_id
   key         = "karpenter.sh/discovery"
@@ -184,7 +176,6 @@ resource "helm_release" "karpenter" {
 
   depends_on = [
     aws_eks_pod_identity_association.karpenter,
-    aws_ec2_tag.karpenter_subnet_discovery,
     aws_ec2_tag.karpenter_node_security_group_discovery,
     aws_ec2_tag.karpenter_cluster_security_group_discovery
   ]

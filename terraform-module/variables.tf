@@ -163,58 +163,8 @@ variable "argocd_hosted_zone_name" {
   default     = "381491953024.realhandsonlabs.net"
 }
 
-variable "argocd_capability_name" {
-  description = "Managed Amazon EKS Argo CD capability name"
-  type        = string
-  default     = "argocd"
-}
-
 variable "argocd_namespace" {
-  description = "Namespace for the managed Amazon EKS Argo CD capability"
+  description = "Namespace for ArgoCD"
   type        = string
   default     = "argocd"
-}
-
-variable "argocd_enable_managed_capability" {
-  description = "Create the managed Amazon EKS Argo CD capability"
-  type        = bool
-  default     = true
-}
-
-variable "argocd_identity_center_instance_arn" {
-  description = "AWS Identity Center instance ARN used by the managed ArgoCD capability"
-  type        = string
-  default     = null
-  nullable    = true
-}
-
-variable "argocd_identity_center_region" {
-  description = "AWS Region for the Identity Center instance used by managed ArgoCD"
-  type        = string
-  default     = null
-  nullable    = true
-}
-
-variable "argocd_admin_group_ids" {
-  description = "AWS Identity Center group IDs mapped to the ADMIN Argo CD role"
-  type        = list(string)
-  default     = []
-}
-
-variable "argocd_editor_group_ids" {
-  description = "AWS Identity Center group IDs mapped to the EDITOR Argo CD role"
-  type        = list(string)
-  default     = []
-}
-
-variable "argocd_viewer_group_ids" {
-  description = "AWS Identity Center group IDs mapped to the VIEWER Argo CD role"
-  type        = list(string)
-  default     = []
-}
-
-variable "argocd_enable_secrets_manager_access" {
-  description = "Attach AWS Secrets Manager read access to the managed ArgoCD capability role"
-  type        = bool
-  default     = true
 }
