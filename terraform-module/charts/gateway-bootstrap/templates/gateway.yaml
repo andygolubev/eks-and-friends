@@ -1,3 +1,19 @@
+apiVersion: gateway.k8s.aws/v1beta1
+kind: LoadBalancerConfiguration
+metadata:
+  name: {{ .Values.gateway.name }}-lbconfig
+  namespace: {{ .Release.Namespace }}
+spec:
+  scheme: internet-facing
+  ipAddressType: ipv4
+  loadBalancerSubnetsSelector:
+    "kubernetes.io/role/elb": ["1"]
+  listenerConfigurations:
+    - protocolPort: "HTTP:80"
+    - protocolPort: "HTTPS:443"
+      certificates: {{ toYaml .Values.gateway.certificateArns | nindent 8 }}
+      sslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
@@ -10,14 +26,13 @@ kind: Gateway
 metadata:
   name: {{ .Values.gateway.name }}
   namespace: {{ .Release.Namespace }}
-  annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: {{ join "," .Values.gateway.certificateArns | quote }}
 spec:
   gatewayClassName: {{ .Values.gatewayClass.name }}
+  infrastructure:
+    parametersRef:
+      group: gateway.k8s.aws
+      kind: LoadBalancerConfiguration
+      name: {{ printf "%s-lbconfig" .Values.gateway.name }}
   listeners:
     - name: http
       port: 80

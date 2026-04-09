@@ -75,6 +75,43 @@ resource "helm_release" "argocd" {
 }
 
 # ---------------------------------------------------------------------------
+# TargetGroupConfiguration — IP mode for argocd-server (avoids Instance default)
+# ---------------------------------------------------------------------------
+
+resource "null_resource" "argocd_target_group_config" {
+  triggers = {
+    cluster_name = module.eks.cluster_name
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOF
+      aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}
+      kubectl apply -f - <<YAML
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: argocd-server-tgc
+  namespace: ${var.argocd_namespace}
+spec:
+  targetReference:
+    name: argocd-server
+    kind: Service
+  defaultConfiguration:
+    targetType: ip
+    protocol: HTTP
+    protocolVersion: HTTP1
+    healthCheckConfig:
+      healthCheckPath: /healthz
+      healthCheckProtocol: HTTP
+      healthCheckPort: "8080"
+YAML
+    EOF
+  }
+
+  depends_on = [helm_release.argocd]
+}
+
+# ---------------------------------------------------------------------------
 # HTTPRoute — route argocd.domain → argocd-server via the shared Gateway
 # ---------------------------------------------------------------------------
 

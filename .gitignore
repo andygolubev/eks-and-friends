@@ -39,4 +39,5 @@ terraform.rc
 .terragrunt-cache
 .DS_Store
 
-temp_example_aws-shared-resources-main/**
+temp_example_*/**
+terraform-module/.terraform-helm-repository-cache/**

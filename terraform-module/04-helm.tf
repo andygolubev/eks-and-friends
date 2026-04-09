@@ -47,7 +47,9 @@ resource "helm_release" "aws_lbc" {
       vpcId = module.vpc.vpc_id
       controllerConfig = {
         featureGates = {
-          ALBGatewayAPI = true
+          ALBGatewayAPI           = true
+          ALBTargetControlAgent   = true
+          EnhancedDefaultBehavior = true
         }
       }
     })

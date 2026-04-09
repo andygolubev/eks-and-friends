@@ -2,5 +2,5 @@ apiVersion: v2
 name: gateway-bootstrap
 description: Gateway API bootstrap resources for the EKS cluster
 type: application
-version: 0.1.0
+version: 0.6.0
 appVersion: "1.0.0"
