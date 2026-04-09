@@ -1,0 +1,104 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: frontend-svc-tgc
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  targetReference:
+    name: frontend-svc
+    kind: Service
+  defaultConfiguration:
+    targetType: {{ .Values.gateway.targetType }}
+    protocol: HTTP
+    protocolVersion: HTTP1
+    healthCheckConfig:
+      healthCheckPath: {{ .Values.gateway.healthCheckPath | quote }}
+      healthCheckProtocol: HTTP
+      healthCheckPort: {{ .Values.service.port | quote }}
+---
+{{- if .Values.gateway.enableHttps }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: frontend-http-redirect
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+{{ with .Values.gateway.annotations }}
+  annotations:
+{{ toYaml . | nindent 4 }}
+{{ end }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: {{ .Values.gateway.httpListenerName }}
+  hostnames:
+    - {{ .Values.gateway.hostname | quote }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: frontend
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+{{ with .Values.gateway.annotations }}
+  annotations:
+{{ toYaml . | nindent 4 }}
+{{ end }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: {{ .Values.gateway.httpsListenerName }}
+  hostnames:
+    - {{ .Values.gateway.hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: frontend-svc
+          port: {{ .Values.service.port }}
+{{- else }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: frontend
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+{{ with .Values.gateway.annotations }}
+  annotations:
+{{ toYaml . | nindent 4 }}
+{{ end }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: {{ .Values.gateway.httpListenerName }}
+  hostnames:
+    - {{ .Values.gateway.hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: frontend-svc
+          port: {{ .Values.service.port }}
+{{- end }}
+{{- end }}

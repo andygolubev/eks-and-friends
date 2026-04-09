@@ -16,10 +16,14 @@ resources:
     cpu: 200m
     memory: 128Mi
 
-ingress:
+gateway:
   enabled: true
+  name: argocd-gateway
+  namespace: argocd
   hostname: front.064083568243.realhandsonlabs.net
-  ingressClassName: alb
+  httpListenerName: http
+  httpsListenerName: https
   enableHttps: true
-  certificateArn: ""
+  targetType: ip
+  healthCheckPath: /healthz
   annotations: {}

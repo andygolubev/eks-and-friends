@@ -14,7 +14,7 @@ argocd-apps/
 └── charts/             # Helm 3 charts for each service
     ├── auth/           # Auth service + MongoDB StatefulSet
     ├── backend/        # Backend service + PostgreSQL + Liquibase migrations
-    └── frontend/       # Frontend React app + Nginx + Ingress
+    └── frontend/       # Frontend React app + Nginx + Gateway API route
 ```
 
 ## Apps Overview
@@ -23,7 +23,7 @@ argocd-apps/
 |----------|-----------|------------------------------------------------------|
 | **auth** | `auth`    | Auth service (Rust), MongoDB StatefulSet             |
 | **backend** | `backend` | Backend service (Rust), PostgreSQL StatefulSet, Liquibase migrations |
-| **frontend** | `frontend` | React app + Nginx, ALB Ingress with TLS             |
+| **frontend** | `frontend` | React app + Nginx, Gateway API HTTPRoute with TLS  |
 
 ## Network Policies
 
@@ -40,6 +40,7 @@ argocd-apps/
 1. ArgoCD installed on the cluster
 2. `kubectl` configured for the EKS cluster
 3. Images built and pushed to Docker Hub (`andygolubev/eks-demo-*`)
+4. Gateway API CRDs and the shared `argocd-gateway` already installed in the cluster
 
 ### Bootstrap App of Apps
 
@@ -62,8 +63,9 @@ Charts reference images by version tag (e.g. `v0.0.1` or `sha-abc1234`). Tags ar
 ## Customization
 
 - **Image registry/tag**: Edit `values.yaml` in each chart under `charts/<app>/`
-- **Frontend hostname**: `charts/frontend/values.yaml` → `ingress.hostname`
-- **Frontend TLS**: `charts/frontend/values.yaml` → `ingress.certificateArn` (ACM ARN)
+- **Frontend hostname**: `charts/frontend/values.yaml` → `gateway.hostname`
+- **Frontend Gateway**: `charts/frontend/values.yaml` → `gateway.name` / `gateway.namespace`
+- **Frontend TLS**: Managed on the shared Gateway listener, not in the frontend chart
 - **Replicas, resources**: `values.yaml` per chart
 
 ## Sync Behavior
