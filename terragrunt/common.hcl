@@ -1,6 +1,6 @@
 locals {
   inputs = {
-    aws_region         = "us-east-1"
+    aws_region         = "us-west-2"
     project            = "eks-demo"
     environment        = "dev"
     cluster_name       = "eks-demo"
