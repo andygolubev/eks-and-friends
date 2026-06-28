@@ -29,4 +29,3 @@ inputs = {
   repo_revision = "main"
 }
 
-

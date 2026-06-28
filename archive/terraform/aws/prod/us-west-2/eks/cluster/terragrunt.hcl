@@ -22,4 +22,3 @@ inputs = {
   tags               = include.common.locals.common_tags
 }
 
-

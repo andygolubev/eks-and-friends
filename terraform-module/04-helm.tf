@@ -44,7 +44,7 @@ resource "helm_release" "aws_lbc" {
       serviceAccount = {
         name = "aws-load-balancer-controller"
       }
-      vpcId = module.vpc.vpc_id
+      vpcId = local.vpc_id
       controllerConfig = {
         featureGates = {
           ALBGatewayAPI           = true

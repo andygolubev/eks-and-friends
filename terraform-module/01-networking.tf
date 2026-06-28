@@ -8,6 +8,8 @@ locals {
   private_subnet_cidrs = [
     for idx, az in local.azs : cidrsubnet(var.vpc_cidr, 4, idx + length(local.azs))
   ]
+  vpc_id             = var.create_vpc ? module.vpc[0].vpc_id : var.existing_vpc_id
+  private_subnet_ids = var.create_vpc ? module.vpc[0].private_subnets : var.existing_private_subnet_ids
 }
 
 data "aws_availability_zones" "available" {
@@ -15,6 +17,7 @@ data "aws_availability_zones" "available" {
 }
 
 module "vpc" {
+  count   = var.create_vpc ? 1 : 0
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 6.6"
 
@@ -41,8 +44,8 @@ module "vpc" {
   ]
 
   public_subnet_tags = {
-    Tier                                = "public"
-    "kubernetes.io/role/elb"            = "1"
+    Tier                                        = "public"
+    "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
   private_subnet_tags = {
@@ -50,5 +53,14 @@ module "vpc" {
     "kubernetes.io/role/internal-elb"           = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "karpenter.sh/discovery"                    = var.cluster_name
+  }
+}
+
+resource "terraform_data" "validate_external_vpc" {
+  lifecycle {
+    precondition {
+      condition     = var.create_vpc || (var.existing_vpc_id != null && length(var.existing_private_subnet_ids) >= 2)
+      error_message = "existing_vpc_id and at least two existing_private_subnet_ids are required when create_vpc is false."
+    }
   }
 }

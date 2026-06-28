@@ -1,11 +1,11 @@
-output "argocd_url" {
-  description = "ArgoCD web UI URL"
-  value       = "https://${var.argocd_domain}"
+output "argocd_capability_name" {
+  description = "Managed Amazon EKS Argo CD capability name"
+  value       = aws_eks_capability.argocd.capability_name
 }
 
-output "argocd_password_command" {
-  description = "Command to retrieve the ArgoCD admin password"
-  value       = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 --decode"
+output "argocd_capability_arn" {
+  description = "Managed Amazon EKS Argo CD capability ARN"
+  value       = aws_eks_capability.argocd.arn
 }
 
 output "kubeconfig_command" {
@@ -21,11 +21,6 @@ output "cluster_name" {
 output "cluster_endpoint" {
   description = "EKS cluster API endpoint"
   value       = module.eks.cluster_endpoint
-}
-
-output "argocd_bootstrap_command" {
-  description = "Command to deploy the App of Apps"
-  value       = "kubectl apply -f https://raw.githubusercontent.com/andygolubev/eks-and-friends/main/argocd-apps/root-app.yaml"
 }
 
 output "frontend_url" {

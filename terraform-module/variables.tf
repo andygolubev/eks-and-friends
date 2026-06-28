@@ -25,13 +25,32 @@ variable "cluster_name" {
 variable "kubernetes_version" {
   description = "Kubernetes version for the EKS control plane"
   type        = string
-  default     = "1.35"
+  default     = "1.36"
 }
 
 variable "vpc_cidr" {
   description = "CIDR range for the VPC"
   type        = string
   default     = "10.0.0.0/16"
+}
+
+variable "create_vpc" {
+  description = "Create the VPC in this stack"
+  type        = bool
+  default     = true
+}
+
+variable "existing_vpc_id" {
+  description = "Existing VPC ID when create_vpc is false"
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "existing_private_subnet_ids" {
+  description = "Existing private subnet IDs when create_vpc is false"
+  type        = list(string)
+  default     = []
 }
 
 variable "cluster_public_access_cidrs" {
@@ -138,33 +157,77 @@ variable "enable_cert_manager" {
 variable "frontend_domain" {
   description = "Domain name for frontend ingress"
   type        = string
-  default     = "front.381491953024.realhandsonlabs.net"
+  default     = "front.eks-demo-cluster.online"
 }
 
 variable "frontend_hosted_zone_name" {
   description = "Route 53 hosted zone name used for frontend DNS validation"
   type        = string
-  default     = "381491953024.realhandsonlabs.net"
+  default     = "eks-demo-cluster.online"
 }
 
 # ---------------------------------------------------------------------------
 # ArgoCD (Managed Capability)
 # ---------------------------------------------------------------------------
 
-variable "argocd_domain" {
-  description = "Fully-qualified domain name for the ArgoCD server"
-  type        = string
-  default     = "argocd.381491953024.realhandsonlabs.net"
-}
-
-variable "argocd_hosted_zone_name" {
-  description = "Route 53 hosted zone name used for ArgoCD DNS"
-  type        = string
-  default     = "381491953024.realhandsonlabs.net"
-}
-
 variable "argocd_namespace" {
   description = "Namespace for ArgoCD"
   type        = string
   default     = "argocd"
+}
+
+variable "argocd_capability_name" {
+  description = "Name of the Amazon EKS Argo CD capability"
+  type        = string
+  default     = "argocd"
+}
+
+variable "argocd_identity_center_instance_arn" {
+  description = "IAM Identity Center instance ARN; discovered automatically when null"
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "argocd_identity_center_region" {
+  description = "IAM Identity Center region; defaults to aws_region"
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "argocd_admin_group_ids" {
+  description = "IAM Identity Center group IDs granted Argo CD ADMIN access"
+  type        = list(string)
+  default     = []
+}
+
+variable "argocd_editor_group_ids" {
+  description = "IAM Identity Center group IDs granted Argo CD EDITOR access"
+  type        = list(string)
+  default     = []
+}
+
+variable "argocd_viewer_group_ids" {
+  description = "IAM Identity Center group IDs granted Argo CD VIEWER access"
+  type        = list(string)
+  default     = []
+}
+
+variable "argocd_gitops_repo_url" {
+  description = "Repository watched by the Argo CD root Application"
+  type        = string
+  default     = "https://github.com/andygolubev/eks-and-friends.git"
+}
+
+variable "argocd_gitops_target_revision" {
+  description = "Git revision watched by the Argo CD root Application"
+  type        = string
+  default     = "main"
+}
+
+variable "argocd_gitops_source_path" {
+  description = "Repository path watched by the Argo CD root Application"
+  type        = string
+  default     = "argocd-apps/apps"
 }

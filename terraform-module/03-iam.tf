@@ -267,5 +267,20 @@ resource "aws_iam_role_policy_attachment" "karpenter_controller_policy" {
   policy_arn = aws_iam_policy.karpenter_controller.arn
 }
 
+data "aws_iam_policy_document" "argocd_capability_assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole", "sts:TagSession"]
+    principals {
+      type        = "Service"
+      identifiers = ["capabilities.eks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "argocd_capability" {
+  name               = "${var.cluster_name}-argocd-capability"
+  assume_role_policy = data.aws_iam_policy_document.argocd_capability_assume_role.json
+}
 
 

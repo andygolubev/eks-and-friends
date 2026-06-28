@@ -35,7 +35,7 @@ resource "null_resource" "aws_lbc_gateway_crds" {
 }
 
 # ---------------------------------------------------------------------------
-# Gateway bootstrap — GatewayClass + Gateway (includes ArgoCD cert for TLS)
+# Gateway bootstrap — GatewayClass + shared application Gateway
 # ---------------------------------------------------------------------------
 
 resource "helm_release" "gateway_bootstrap" {
@@ -54,11 +54,8 @@ resource "helm_release" "gateway_bootstrap" {
         controllerName = "gateway.k8s.aws/alb"
       }
       gateway = {
-        name = "argocd-gateway"
-        certificateArns = [
-          aws_acm_certificate_validation.frontend.certificate_arn,
-          aws_acm_certificate_validation.argocd.certificate_arn,
-        ]
+        name            = "argocd-gateway"
+        certificateArns = [aws_acm_certificate_validation.frontend.certificate_arn]
       }
     })
   ]
@@ -66,7 +63,7 @@ resource "helm_release" "gateway_bootstrap" {
   depends_on = [
     null_resource.gateway_api_crds,
     null_resource.aws_lbc_gateway_crds,
-    aws_acm_certificate_validation.argocd,
+    aws_acm_certificate_validation.frontend,
   ]
 }
 

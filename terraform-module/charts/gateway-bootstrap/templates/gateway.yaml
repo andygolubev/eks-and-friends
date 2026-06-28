@@ -50,5 +50,5 @@ spec:
         mode: Terminate
         certificateRefs:
           - kind: Secret
-            name: argocd-tls
+            name: frontend-tls
             group: ""

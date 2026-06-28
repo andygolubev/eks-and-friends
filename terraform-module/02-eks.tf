@@ -4,10 +4,10 @@ locals {
   eks_addons = merge(
     {
       "eks-pod-identity-agent" = {
-        addon_version = "v1.3.10-eksbuild.2"
+        most_recent = true
       }
       "aws-ebs-csi-driver" = {
-        addon_version               = "v1.54.0-eksbuild.1"
+        most_recent                 = true
         resolve_conflicts_on_create = "OVERWRITE"
       }
       "vpc-cni" = {
@@ -52,8 +52,8 @@ module "eks" {
   enable_irsa                              = true
   enable_cluster_creator_admin_permissions = true
 
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
+  vpc_id     = local.vpc_id
+  subnet_ids = local.private_subnet_ids
 
   security_group_additional_rules = {
     api_from_vpc = {
