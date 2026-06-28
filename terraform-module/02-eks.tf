@@ -46,7 +46,7 @@ module "eks" {
   authentication_mode = "API"
 
   endpoint_public_access       = true
-  endpoint_private_access      = false
+  endpoint_private_access      = true
   endpoint_public_access_cidrs = var.cluster_public_access_cidrs
 
   enable_irsa                              = true
