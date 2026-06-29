@@ -59,9 +59,36 @@ resource "aws_eks_access_policy_association" "argocd_cluster_admin" {
   depends_on = [aws_eks_capability.argocd]
 }
 
+# EKS Managed Argo CD runs outside the cluster and does not support the
+# conventional https://kubernetes.default.svc destination. Register this EKS
+# cluster explicitly using its ARN, as required by the managed capability.
+resource "kubernetes_secret_v1" "argocd_local_cluster" {
+  metadata {
+    name      = "in-cluster"
+    namespace = var.argocd_namespace
+    labels = {
+      "argocd.argoproj.io/secret-type" = "cluster"
+    }
+  }
+
+  data = {
+    name    = "in-cluster"
+    server  = module.eks.cluster_arn
+    project = "default"
+  }
+
+  type = "Opaque"
+
+  depends_on = [
+    aws_eks_capability.argocd,
+    aws_eks_access_policy_association.argocd_cluster_admin,
+  ]
+}
+
 resource "null_resource" "argocd_gitops_bootstrap" {
   triggers = {
     cluster_name = module.eks.cluster_name
+    cluster_arn  = module.eks.cluster_arn
     repo_url     = var.argocd_gitops_repo_url
     revision     = var.argocd_gitops_target_revision
     source_path  = var.argocd_gitops_source_path
@@ -90,7 +117,7 @@ resource "null_resource" "argocd_gitops_bootstrap" {
           targetRevision: ${var.argocd_gitops_target_revision}
           path: ${var.argocd_gitops_source_path}
         destination:
-          server: https://kubernetes.default.svc
+          server: ${module.eks.cluster_arn}
           namespace: ${var.argocd_namespace}
         syncPolicy:
           automated:
@@ -100,5 +127,5 @@ resource "null_resource" "argocd_gitops_bootstrap" {
     EOF
   }
 
-  depends_on = [aws_eks_access_policy_association.argocd_cluster_admin]
+  depends_on = [kubernetes_secret_v1.argocd_local_cluster]
 }
