@@ -12,7 +12,7 @@ spec:
     targetRevision: main
     path: argocd-apps/apps
   destination:
-    server: https://kubernetes.default.svc
+    name: in-cluster
     namespace: argocd
   syncPolicy:
     automated:
