@@ -20,7 +20,7 @@ gateway:
   enabled: true
   name: argocd-gateway
   namespace: argocd
-  hostname: front.064083568243.realhandsonlabs.net
+  hostname: front.eks-demo-cluster.online
   httpListenerName: http
   httpsListenerName: https
   enableHttps: true
