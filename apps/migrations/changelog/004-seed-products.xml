@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Replace the old generic seed with an online-shop catalog
+         (inspired by Google's "Online Boutique" demo). -->
+    <changeSet id="004-clear-old-seed" author="platform-team" context="seed">
+        <delete tableName="products" />
+    </changeSet>
+
+    <changeSet id="004-seed-shop-catalog" author="platform-team" context="seed">
+        <insert tableName="products">
+            <column name="name" value="Sunglasses" />
+            <column name="description" value="Add a modern touch to your outfits with these sleek aviator sunglasses." />
+            <column name="price_cents" valueNumeric="1900" />
+            <column name="category" value="accessories" />
+            <column name="emoji" value="🕶️" />
+            <column name="stock" valueNumeric="50" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Tank Top" />
+            <column name="description" value="Perfectly cropped cotton tank, with a scooped neckline." />
+            <column name="price_cents" valueNumeric="1899" />
+            <column name="category" value="clothing" />
+            <column name="emoji" value="👕" />
+            <column name="stock" valueNumeric="120" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Watch" />
+            <column name="description" value="This gold-tone stainless steel watch will work with most of your outfits." />
+            <column name="price_cents" valueNumeric="10999" />
+            <column name="category" value="accessories" />
+            <column name="emoji" value="⌚" />
+            <column name="stock" valueNumeric="30" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Loafers" />
+            <column name="description" value="A neat addition to your summer wardrobe." />
+            <column name="price_cents" valueNumeric="3799" />
+            <column name="category" value="footwear" />
+            <column name="emoji" value="👞" />
+            <column name="stock" valueNumeric="40" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Hairdryer" />
+            <column name="description" value="This lightweight hairdryer has 3 heat and speed settings." />
+            <column name="price_cents" valueNumeric="2449" />
+            <column name="category" value="home" />
+            <column name="emoji" value="💨" />
+            <column name="stock" valueNumeric="25" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Candle Holder" />
+            <column name="description" value="This small but intricate candle holder is an excellent gift." />
+            <column name="price_cents" valueNumeric="1849" />
+            <column name="category" value="home" />
+            <column name="emoji" value="🕯️" />
+            <column name="stock" valueNumeric="60" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Salt &amp; Pepper Shakers" />
+            <column name="description" value="Add some flavor to your kitchen with this set of salt and pepper shakers." />
+            <column name="price_cents" valueNumeric="1849" />
+            <column name="category" value="kitchen" />
+            <column name="emoji" value="🧂" />
+            <column name="stock" valueNumeric="80" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Bamboo Glass Jar" />
+            <column name="description" value="This jar made of natural bamboo is the perfect storage solution." />
+            <column name="price_cents" valueNumeric="5849" />
+            <column name="category" value="kitchen" />
+            <column name="emoji" value="🫙" />
+            <column name="stock" valueNumeric="35" />
+        </insert>
+        <insert tableName="products">
+            <column name="name" value="Mug" />
+            <column name="description" value="A simple mug with a mustard interior, perfect for your morning coffee." />
+            <column name="price_cents" valueNumeric="899" />
+            <column name="category" value="kitchen" />
+            <column name="emoji" value="☕" />
+            <column name="stock" valueNumeric="200" />
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
