@@ -117,3 +117,23 @@ data "aws_lb" "gateway" {
 
   depends_on = [null_resource.wait_for_gateway_alb]
 }
+
+# ---------------------------------------------------------------------------
+# Public DNS — alias the frontend hostname to the Gateway ALB
+# ---------------------------------------------------------------------------
+
+resource "aws_route53_record" "frontend" {
+  zone_id = data.aws_route53_zone.frontend.zone_id
+  name    = var.frontend_domain
+  type    = "A"
+
+  # Overwrite any pre-existing record (e.g. a manually created CNAME) so the
+  # managed alias becomes the source of truth.
+  allow_overwrite = true
+
+  alias {
+    name                   = data.aws_lb.gateway.dns_name
+    zone_id                = data.aws_lb.gateway.zone_id
+    evaluate_target_health = true
+  }
+}
